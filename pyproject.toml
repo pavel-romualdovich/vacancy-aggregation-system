@@ -5,3 +5,77 @@ description = "IT vacancy aggregation and analysis system"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["vacancy_aggregator", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "I",     # isort
+    "N",     # pep8-naming
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+    "RET",   # flake8-return
+    "RUF",   # Ruff-specific rules
+    "D",     # pydocstyle (Google convention)
+    "ANN",   # flake8-annotations
+    "A",     # flake8-builtins (shadowing)
+    "ARG",   # flake8-unused-arguments
+    "PIE",   # flake8-pie
+    "ERA",   # eradicate — commented-out code
+    "FLY",   # flynt — unnecessary f-strings
+    "PTH",   # flake8-use-pathlib
+    "SLF",   # private member access
+    "S",     # flake8-bandit — security
+    "ASYNC", # flake8-async — asyncio correctness
+    "PERF",  # perflint — performance
+    "TCH",   # flake8-type-checking — TYPE_CHECKING blocks
+    "PT",    # flake8-pytest-style
+    "C90",   # mccabe — cyclomatic complexity
+]
+ignore = [
+    "ANN401", # allow dynamically typed expressions (`Any`) where justified
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests use plain `assert` and do not require docstrings.
+"tests/**" = ["S101", "D"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = ["vacancy_aggregator"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Body",
+    "fastapi.Path",
+    "fastapi.Form",
+    "fastapi.File",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
