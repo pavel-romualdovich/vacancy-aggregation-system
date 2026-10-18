@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "IT vacancy aggregation and analysis system"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "uuid6>=2025.0.1",
+]
 
 [dependency-groups]
 dev = [
