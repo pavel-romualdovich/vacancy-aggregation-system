@@ -12,6 +12,7 @@ dependencies = [
 dev = [
     "ruff>=0.17.0",
     "mypy>=2.4.0",
+    "pytest>=9.1.1",
 ]
 
 [tool.ruff]
@@ -90,3 +91,7 @@ strict = true
 pretty = true
 show_error_codes = true
 enable_error_code = ["ignore-without-code"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
