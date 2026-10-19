@@ -8,6 +8,7 @@
 - Lint: uv run ruff check .
 - Format: uv run ruff format .
 - Type check: uv run mypy vacancy_aggregator
+- Tests: uv run pytest
 
 ## Conventions
 - Keep ruff check, ruff format and mypy green
