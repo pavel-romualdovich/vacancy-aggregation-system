@@ -52,6 +52,11 @@ select = [
 ]
 ignore = [
     "ANN401", # allow dynamically typed expressions (`Any`) where justified
+    # Cyrillic characters are intentional (ru vacancy data): ambiguous-unicode
+    # rules would flag legal forms, regions and test data on every change.
+    "RUF001",
+    "RUF002",
+    "RUF003",
 ]
 
 [tool.ruff.lint.per-file-ignores]
