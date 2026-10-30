@@ -9,6 +9,7 @@ from vacancy_aggregator.core.models.values import Employer, Region, Skills, Titl
 
 if TYPE_CHECKING:
     from datetime import datetime
+    from uuid import UUID
 
     from vacancy_aggregator.core.models.enums import (
         EmploymentType,
@@ -27,7 +28,9 @@ class SourceVacancy:
     Identity is the :class:`SourceRef` — ``(source, source_id)`` is globally
     unique. Business fields follow the unified representation; the service
     dates stay here and never leak into the public API. The public link is not
-    stored: the adapter builds it from ``source_id`` on demand.
+    stored: the adapter builds it from ``source_id`` on demand. ``domain_id``
+    links this observation to its merged :class:`DomainVacancy`; it is None
+    until the resolver attaches the record.
 
     ``published_at`` is a snapshot taken on the first sight of the vacancy in
     the aggregator: it is never refreshed by later collections. If the source
@@ -42,6 +45,7 @@ class SourceVacancy:
     published_at: datetime
     last_seen_at: datetime
     employer: Employer
+    domain_id: UUID | None = None
     description: str | None = None
     salary: Salary | None = None
     region: Region | None = None
