@@ -6,16 +6,23 @@ from datetime import datetime
 
 import pytest
 
-from vacancy_aggregator.core.models import DomainVacancy, Skills
+from vacancy_aggregator.core.models import (
+    DomainVacancy,
+    Employer,
+    Skills,
+    Title,
+)
 
 PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
 INACTIVE_AT = datetime(2026, 1, 2, 12, 0)
+DEFAULT_TITLE = Title("python dev")
+DEFAULT_EMPLOYER = Employer("acme")
 
 
 def make_domain_vacancy(
-    title: str = "Python Dev",
+    title: Title = DEFAULT_TITLE,
     published_at: datetime = PUBLISHED_AT,
-    employer: str = "Acme",
+    employer: Employer = DEFAULT_EMPLOYER,
     inactive_since: datetime | None = None,
 ) -> DomainVacancy:
     """Build a DomainVacancy with convenient defaults."""
@@ -37,46 +44,21 @@ def test_is_inactive_when_inactive_since_set() -> None:
     assert vacancy.is_active is False
 
 
-def test_rejects_empty_title() -> None:
-    with pytest.raises(ValueError, match="title"):
-        make_domain_vacancy(title="")
-
-
-def test_rejects_blank_title() -> None:
-    with pytest.raises(ValueError, match="title"):
-        make_domain_vacancy(title="   ")
-
-
-def test_rejects_empty_employer() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        make_domain_vacancy(employer="")
-
-
 def test_rejects_empty_description() -> None:
     with pytest.raises(ValueError, match="description"):
         DomainVacancy(
-            title="Python Dev",
+            title=DEFAULT_TITLE,
             published_at=PUBLISHED_AT,
-            employer="Acme",
+            employer=DEFAULT_EMPLOYER,
             description="",
-        )
-
-
-def test_rejects_blank_region() -> None:
-    with pytest.raises(ValueError, match="region"):
-        DomainVacancy(
-            title="Python Dev",
-            published_at=PUBLISHED_AT,
-            employer="Acme",
-            region="   ",
         )
 
 
 def test_accepts_none_optional_fields() -> None:
     vacancy = DomainVacancy(
-        title="Python Dev",
+        title=DEFAULT_TITLE,
         published_at=PUBLISHED_AT,
-        employer="Acme",
+        employer=DEFAULT_EMPLOYER,
         description=None,
         region=None,
     )
@@ -86,9 +68,9 @@ def test_accepts_none_optional_fields() -> None:
 
 def test_accepts_normalized_skills() -> None:
     vacancy = DomainVacancy(
-        title="Python Dev",
+        title=DEFAULT_TITLE,
         published_at=PUBLISHED_AT,
-        employer="Acme",
+        employer=DEFAULT_EMPLOYER,
         skills=Skills(["python", "django"]),
     )
     assert vacancy.skills == frozenset({"python", "django"})

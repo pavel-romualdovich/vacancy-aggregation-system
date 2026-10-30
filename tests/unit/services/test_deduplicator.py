@@ -6,21 +6,27 @@ from datetime import datetime, timedelta
 
 from vacancy_aggregator.core.models import (
     DomainVacancy,
+    Employer,
+    Region,
     SourceRef,
     SourceVacancy,
+    Title,
 )
 from vacancy_aggregator.core.services.deduplicator import is_duplicate
 
 PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
 WINDOW = timedelta(days=30)
+DEFAULT_TITLE = Title("python developer")
+DEFAULT_EMPLOYER = Employer("acme")
+DEFAULT_REGION = Region("moscow")
 
 
 def make_source_vacancy(
     *,
-    title: str = "Python Developer",
+    title: Title = DEFAULT_TITLE,
     published_at: datetime = PUBLISHED_AT,
-    employer: str = "Acme",
-    region: str | None = "Moscow",
+    employer: Employer = DEFAULT_EMPLOYER,
+    region: Region | None = DEFAULT_REGION,
 ) -> SourceVacancy:
     """Build a SourceVacancy with convenient defaults."""
     return SourceVacancy(
@@ -35,10 +41,10 @@ def make_source_vacancy(
 
 def make_domain_vacancy(
     *,
-    title: str = "Python Developer",
+    title: Title = DEFAULT_TITLE,
     published_at: datetime = PUBLISHED_AT,
-    employer: str = "Acme",
-    region: str | None = "Moscow",
+    employer: Employer = DEFAULT_EMPLOYER,
+    region: Region | None = DEFAULT_REGION,
 ) -> DomainVacancy:
     """Build a DomainVacancy with convenient defaults."""
     return DomainVacancy(
@@ -76,13 +82,13 @@ def test_window_is_symmetric() -> None:
 
 
 def test_not_duplicate_when_title_differs() -> None:
-    candidate = make_source_vacancy(title="Java Developer")
+    candidate = make_source_vacancy(title=Title("java developer"))
     existing = make_domain_vacancy()
     assert is_duplicate(candidate, existing, window=WINDOW) is False
 
 
 def test_not_duplicate_when_region_differs() -> None:
-    candidate = make_source_vacancy(region="Saint Petersburg")
+    candidate = make_source_vacancy(region=Region("saint petersburg"))
     existing = make_domain_vacancy()
     assert is_duplicate(candidate, existing, window=WINDOW) is False
 
@@ -98,6 +104,6 @@ def test_region_required_in_both() -> None:
 
 
 def test_not_duplicate_when_employer_differs() -> None:
-    candidate = make_source_vacancy(employer="Other")
+    candidate = make_source_vacancy(employer=Employer("other"))
     existing = make_domain_vacancy()
     assert is_duplicate(candidate, existing, window=WINDOW) is False

@@ -12,19 +12,29 @@ from vacancy_aggregator.core.models.enums import (
     WorkFormat,
 )
 from vacancy_aggregator.core.models.source_vacancy import SourceVacancy
-from vacancy_aggregator.core.models.values import Salary, Skills, SourceRef
+from vacancy_aggregator.core.models.values import (
+    Employer,
+    Region,
+    Salary,
+    Skills,
+    SourceRef,
+    Title,
+)
 
 __all__ = [
     "Currency",
     "DomainVacancy",
+    "Employer",
     "EmploymentType",
     "Experience",
     "Grade",
+    "Region",
     "Salary",
     "Skills",
     "SourceRef",
     "SourceVacancy",
     "Specialization",
+    "Title",
     "WorkFormat",
     "uuid7",
 ]

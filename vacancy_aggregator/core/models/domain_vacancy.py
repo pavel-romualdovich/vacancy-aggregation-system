@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from uuid6 import uuid7
 
-from vacancy_aggregator.core.models.values import Skills
+from vacancy_aggregator.core.models.values import Employer, Region, Skills, Title
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -38,13 +38,13 @@ class DomainVacancy:
     exactly when the vacancy is inactive.
     """
 
-    title: str
+    title: Title
     published_at: datetime
-    employer: str
+    employer: Employer
     id: UUID = field(default_factory=uuid7)
     description: str | None = None
     salary: Salary | None = None
-    region: str | None = None
+    region: Region | None = None
     experience: Experience | None = None
     employment_type: EmploymentType | None = None
     work_format: WorkFormat | None = None
@@ -60,15 +60,6 @@ class DomainVacancy:
 
     def __post_init__(self) -> None:
         """Validate non-empty fields."""
-        if not self.title.strip():
-            msg = "title must not be empty"
-            raise ValueError(msg)
-        if not self.employer.strip():
-            msg = "employer must not be empty"
-            raise ValueError(msg)
         if self.description is not None and not self.description.strip():
             msg = "description must not be empty"
-            raise ValueError(msg)
-        if self.region is not None and not self.region.strip():
-            msg = "region must not be empty"
             raise ValueError(msg)

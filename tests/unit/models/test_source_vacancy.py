@@ -6,20 +6,29 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from vacancy_aggregator.core.models import Skills, SourceRef, SourceVacancy
+from vacancy_aggregator.core.models import (
+    Employer,
+    Region,
+    Skills,
+    SourceRef,
+    SourceVacancy,
+    Title,
+)
 
 PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
 LAST_SEEN_AT = datetime(2026, 1, 2, 12, 0)
 EMPTY_SKILLS = Skills()
+DEFAULT_TITLE = Title("python dev")
+DEFAULT_EMPLOYER = Employer("acme")
 
 
 def make_source_vacancy(
-    title: str = "Python Dev",
+    title: Title = DEFAULT_TITLE,
     published_at: datetime = PUBLISHED_AT,
     last_seen_at: datetime = LAST_SEEN_AT,
-    employer: str = "Acme",
+    employer: Employer = DEFAULT_EMPLOYER,
     description: str | None = None,
-    region: str | None = None,
+    region: Region | None = None,
     skills: Skills = EMPTY_SKILLS,
     detected_updated_at: datetime | None = None,
 ) -> SourceVacancy:
@@ -47,24 +56,9 @@ def test_accepts_detected_updated_at_last_seen() -> None:
     assert vacancy.detected_updated_at == LAST_SEEN_AT
 
 
-def test_rejects_empty_title() -> None:
-    with pytest.raises(ValueError, match="title"):
-        make_source_vacancy(title="")
-
-
-def test_rejects_blank_employer() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        make_source_vacancy(employer="   ")
-
-
 def test_rejects_empty_description() -> None:
     with pytest.raises(ValueError, match="description"):
         make_source_vacancy(description="")
-
-
-def test_rejects_blank_region() -> None:
-    with pytest.raises(ValueError, match="region"):
-        make_source_vacancy(region="   ")
 
 
 def test_accepts_none_description_and_region() -> None:

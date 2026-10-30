@@ -8,33 +8,38 @@ import pytest
 
 from vacancy_aggregator.core.models import (
     Currency,
+    Employer,
     EmploymentType,
     Experience,
     Grade,
+    Region,
     Salary,
     Skills,
     SourceRef,
     SourceVacancy,
     Specialization,
+    Title,
     WorkFormat,
 )
 from vacancy_aggregator.core.services.merger import build_domain_vacancy
 
 PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
 EMPTY_SKILLS = Skills()
+DEFAULT_TITLE = Title("python dev")
+DEFAULT_EMPLOYER = Employer("acme")
 
 
 def make_source_vacancy(
     *,
     source: str = "hh",
     source_id: str = "1",
-    title: str = "Python Dev",
+    title: Title = DEFAULT_TITLE,
     published_at: datetime = PUBLISHED_AT,
     last_seen_at: datetime = PUBLISHED_AT + timedelta(days=1),
-    employer: str = "Acme",
+    employer: Employer = DEFAULT_EMPLOYER,
     description: str | None = None,
     salary: Salary | None = None,
-    region: str | None = None,
+    region: Region | None = None,
     grade: Grade | None = None,
     specialization: Specialization | None = None,
     work_format: WorkFormat | None = None,
@@ -71,15 +76,15 @@ def test_single_source_is_projected() -> None:
     source = make_source_vacancy(
         description="desc",
         salary=salary,
-        region="Moscow",
+        region=Region("moscow"),
         skills=Skills(["python", "django"]),
     )
     vacancy = build_domain_vacancy([source])
-    assert vacancy.title == "Python Dev"
-    assert vacancy.employer == "Acme"
+    assert vacancy.title == "python dev"
+    assert vacancy.employer == "acme"
     assert vacancy.description == "desc"
     assert vacancy.salary == salary
-    assert vacancy.region == "Moscow"
+    assert vacancy.region == "moscow"
     assert vacancy.skills == Skills(["python", "django"])
     assert vacancy.published_at == PUBLISHED_AT
     assert vacancy.is_active is True
@@ -88,11 +93,11 @@ def test_single_source_is_projected() -> None:
 
 def test_identical_values_are_preserved() -> None:
     sources = [
-        make_source_vacancy(source_id="1", region="Moscow"),
-        make_source_vacancy(source_id="2", region="Moscow"),
+        make_source_vacancy(source_id="1", region=Region("moscow")),
+        make_source_vacancy(source_id="2", region=Region("moscow")),
     ]
     vacancy = build_domain_vacancy(sources)
-    assert vacancy.region == "Moscow"
+    assert vacancy.region == "moscow"
 
 
 def test_non_empty_wins_over_empty_regardless_of_freshness() -> None:
@@ -168,7 +173,7 @@ def test_result_is_order_independent() -> None:
 def test_input_sources_are_not_mutated() -> None:
     source = make_source_vacancy(
         description="keep",
-        region="Moscow",
+        region=Region("moscow"),
         skills=Skills(["python"]),
     )
     snapshot = (
@@ -201,10 +206,10 @@ def test_all_empty_optional_fields_merge_to_none() -> None:
 @pytest.mark.parametrize(
     ("field", "older_value", "fresher_value"),
     [
-        ("title", "Old Title", "New Title"),
+        ("title", Title("old title"), Title("new title")),
         ("description", "old", "new"),
-        ("region", "Old", "New"),
-        ("employer", "OldCo", "NewCo"),
+        ("region", Region("old"), Region("new")),
+        ("employer", Employer("oldco"), Employer("newco")),
         ("experience", Experience.FROM_1_TO_3, Experience.MORE_THAN_6),
         ("employment_type", EmploymentType.PART_TIME, EmploymentType.FULL_TIME),
         ("work_format", WorkFormat.REMOTE, WorkFormat.HYBRID),

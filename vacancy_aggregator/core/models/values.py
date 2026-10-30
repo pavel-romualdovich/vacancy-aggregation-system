@@ -11,6 +11,70 @@ if TYPE_CHECKING:
     from vacancy_aggregator.core.models.enums import Currency
 
 
+def _is_canonical(value: str, *, no_specials: bool) -> bool:
+    """Return True when the value is already in canonical text form.
+
+    Single pass, no allocations: no uppercase letters, words separated by
+    single spaces, no leading or trailing whitespace. With ``no_specials``
+    any non-letter/digit character also disqualifies the value. Legal form
+    prefixes are allowed — removing them is the normalizer's job.
+    """
+    prev_space = True
+    for ch in value:
+        if ch == " ":
+            if prev_space:
+                return False
+            prev_space = True
+        elif ch.islower() or ch.isdigit():
+            prev_space = False
+        elif no_specials or ch.isupper():
+            return False
+        else:
+            prev_space = False
+    return not prev_space
+
+
+class Employer(str):
+    """Canonical employer name; the invariant is enforced on construction."""
+
+    def __new__(cls, value: str) -> Employer:
+        """Create an Employer, rejecting non-canonical values."""
+        if not _is_canonical(value, no_specials=True):
+            msg = "employer must be in canonical form"
+            raise ValueError(msg)
+        return super().__new__(cls, value)
+
+
+class Title(str):
+    """Canonical vacancy title; the invariant is enforced on construction.
+
+    Special characters are preserved (e.g. "c++ developer") — only case and
+    spacing are canonicalized.
+    """
+
+    def __new__(cls, value: str) -> Title:
+        """Create a Title, rejecting non-canonical values."""
+        if not _is_canonical(value, no_specials=False):
+            msg = "title must be in canonical form"
+            raise ValueError(msg)
+        return super().__new__(cls, value)
+
+
+class Region(str):
+    """Canonical region name; the invariant is enforced on construction.
+
+    Special characters are preserved (e.g. "saint-petersburg") — only case
+    and spacing are canonicalized.
+    """
+
+    def __new__(cls, value: str) -> Region:
+        """Create a Region, rejecting non-canonical values."""
+        if not _is_canonical(value, no_specials=False):
+            msg = "region must be in canonical form"
+            raise ValueError(msg)
+        return super().__new__(cls, value)
+
+
 class Skills(frozenset[str]):
     """Immutable set of normalized skills.
 
