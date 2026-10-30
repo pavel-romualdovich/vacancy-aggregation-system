@@ -133,3 +133,17 @@ class SourceRef:
 
     source: str
     source_id: str
+
+
+@dataclass(frozen=True)
+class CandidateKey:
+    """Lookup key for deduplication candidates.
+
+    The key is derived from the deduplication rule: equality on employer,
+    title and region. A repository uses it as an index over domain vacancies;
+    the final verdict stays with ``is_duplicate``.
+    """
+
+    employer: Employer
+    title: Title
+    region: Region

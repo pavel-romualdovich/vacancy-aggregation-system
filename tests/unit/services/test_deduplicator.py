@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from vacancy_aggregator.core.models import (
+    CandidateKey,
     DomainVacancy,
     Employer,
     Region,
@@ -12,7 +13,7 @@ from vacancy_aggregator.core.models import (
     SourceVacancy,
     Title,
 )
-from vacancy_aggregator.core.services.deduplicator import is_duplicate
+from vacancy_aggregator.core.services.deduplicator import candidate_key, is_duplicate
 
 PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
 WINDOW = timedelta(days=30)
@@ -107,3 +108,37 @@ def test_not_duplicate_when_employer_differs() -> None:
     candidate = make_source_vacancy(employer=Employer("other"))
     existing = make_domain_vacancy()
     assert is_duplicate(candidate, existing, window=WINDOW) is False
+
+
+def test_candidate_key_reflects_the_rule() -> None:
+    candidate = make_source_vacancy()
+    key = candidate_key(candidate)
+    assert key == CandidateKey(
+        employer=DEFAULT_EMPLOYER,
+        title=DEFAULT_TITLE,
+        region=DEFAULT_REGION,
+    )
+
+
+def test_candidate_key_is_none_without_region() -> None:
+    candidate = make_source_vacancy(region=None)
+    assert candidate_key(candidate) is None
+
+
+def test_candidate_key_matches_duplicate_candidates() -> None:
+    """The index must never lose a duplicate — every is_duplicate pair
+    must share the same candidate key."""
+    candidate = make_source_vacancy()
+    existing = make_domain_vacancy()
+    assert is_duplicate(candidate, existing, window=WINDOW) is True
+    key = candidate_key(candidate)
+    assert key is not None
+    assert (
+        key.employer,
+        key.title,
+        key.region,
+    ) == (
+        existing.employer,
+        existing.title,
+        existing.region,
+    )

@@ -13,6 +13,7 @@ from vacancy_aggregator.core.models.enums import (
 )
 from vacancy_aggregator.core.models.source_vacancy import SourceVacancy
 from vacancy_aggregator.core.models.values import (
+    CandidateKey,
     Employer,
     Region,
     Salary,
@@ -22,6 +23,7 @@ from vacancy_aggregator.core.models.values import (
 )
 
 __all__ = [
+    "CandidateKey",
     "Currency",
     "DomainVacancy",
     "Employer",
