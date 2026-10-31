@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from tests.contract.conftest import DEFAULT_REF, make_source_vacancy
+from tests.support.builders import DEFAULT_REF, make_source_vacancy
 
 from vacancy_aggregator.core.models import SourceRef, Title
 

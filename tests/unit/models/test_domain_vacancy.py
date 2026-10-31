@@ -2,63 +2,31 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import pytest
+from tests.support.builders import PUBLISHED_AT, make_domain_vacancy
 
-from vacancy_aggregator.core.models import (
-    DomainVacancy,
-    Employer,
-    Skills,
-    Title,
-)
-
-PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
-INACTIVE_AT = datetime(2026, 1, 2, 12, 0)
-DEFAULT_TITLE = Title("python dev")
-DEFAULT_EMPLOYER = Employer("acme")
-
-
-def make_domain_vacancy(
-    title: Title = DEFAULT_TITLE,
-    published_at: datetime = PUBLISHED_AT,
-    employer: Employer = DEFAULT_EMPLOYER,
-    inactive_since: datetime | None = None,
-) -> DomainVacancy:
-    """Build a DomainVacancy with convenient defaults."""
-    return DomainVacancy(
-        title=title,
-        published_at=published_at,
-        employer=employer,
-        inactive_since=inactive_since,
-    )
+from vacancy_aggregator.core.models import DomainVacancy, Employer, Skills, Title
 
 
 def test_is_active_when_no_inactive_since() -> None:
-    vacancy = make_domain_vacancy()
-    assert vacancy.is_active is True
+    assert make_domain_vacancy().is_active is True
 
 
 def test_is_inactive_when_inactive_since_set() -> None:
-    vacancy = make_domain_vacancy(inactive_since=INACTIVE_AT)
+    vacancy = make_domain_vacancy(inactive_since=PUBLISHED_AT)
     assert vacancy.is_active is False
 
 
 def test_rejects_empty_description() -> None:
     with pytest.raises(ValueError, match="description"):
-        DomainVacancy(
-            title=DEFAULT_TITLE,
-            published_at=PUBLISHED_AT,
-            employer=DEFAULT_EMPLOYER,
-            description="",
-        )
+        make_domain_vacancy(description="")
 
 
 def test_accepts_none_optional_fields() -> None:
     vacancy = DomainVacancy(
-        title=DEFAULT_TITLE,
+        title=Title("python developer"),
         published_at=PUBLISHED_AT,
-        employer=DEFAULT_EMPLOYER,
+        employer=Employer("acme"),
         description=None,
         region=None,
     )
@@ -67,10 +35,5 @@ def test_accepts_none_optional_fields() -> None:
 
 
 def test_accepts_normalized_skills() -> None:
-    vacancy = DomainVacancy(
-        title=DEFAULT_TITLE,
-        published_at=PUBLISHED_AT,
-        employer=DEFAULT_EMPLOYER,
-        skills=Skills(["python", "django"]),
-    )
+    vacancy = make_domain_vacancy(skills=Skills(["python", "django"]))
     assert vacancy.skills == frozenset({"python", "django"})

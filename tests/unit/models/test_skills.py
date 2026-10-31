@@ -7,26 +7,28 @@ import pytest
 from vacancy_aggregator.core.models import Skills
 
 
-def test_skills_rejects_non_normalized_skill() -> None:
+@pytest.mark.parametrize(
+    "values",
+    [
+        pytest.param(["Python"], id="uppercase"),
+        pytest.param([""], id="empty-skill"),
+        pytest.param([" python "], id="untrimmed"),
+    ],
+)
+def test_rejects_non_normalized_skill(values: list[str]) -> None:
     with pytest.raises(ValueError, match="skill"):
-        Skills(["Python"])
+        Skills(values)
 
 
-def test_skills_rejects_empty_skill() -> None:
-    with pytest.raises(ValueError, match="skill"):
-        Skills([""])
+def test_accepts_normalized_skills() -> None:
+    assert Skills(["python", "django"]) == frozenset({"python", "django"})
 
 
-def test_skills_accepts_normalized_skills() -> None:
-    skills = Skills(["python", "django"])
-    assert skills == frozenset({"python", "django"})
-
-
-def test_skills_defaults_to_empty() -> None:
+def test_defaults_to_empty() -> None:
     assert Skills() == frozenset()
 
 
-def test_skills_deduplicates_and_is_hashable() -> None:
+def test_deduplicates_and_is_hashable() -> None:
     skills = Skills(["python", "python"])
     assert len(skills) == 1
     assert hash(skills) == hash(frozenset({"python"}))

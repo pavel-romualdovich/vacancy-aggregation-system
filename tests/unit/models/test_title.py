@@ -7,8 +7,16 @@ import pytest
 from vacancy_aggregator.core.models import Title
 
 
-def test_accepts_canonical_title() -> None:
-    assert Title("python developer") == "python developer"
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("python developer", id="plain"),
+        pytest.param("c++ developer", id="c-plus-plus"),
+        pytest.param(".net developer", id="dotnet"),
+    ],
+)
+def test_accepts_canonical_title(value: str) -> None:
+    assert Title(value) == value
 
 
 def test_title_is_a_string() -> None:
@@ -17,31 +25,16 @@ def test_title_is_a_string() -> None:
     assert title.upper() == "PYTHON DEVELOPER"
 
 
-def test_accepts_special_characters() -> None:
-    assert Title("c++ developer") == "c++ developer"
-    assert Title(".net developer") == ".net developer"
-
-
-def test_rejects_uppercase() -> None:
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("Python Developer", id="uppercase"),
+        pytest.param("python  developer", id="multiple-spaces"),
+        pytest.param(" python developer", id="leading-space"),
+        pytest.param("python developer ", id="trailing-space"),
+        pytest.param("", id="empty"),
+    ],
+)
+def test_rejects_non_canonical_title(value: str) -> None:
     with pytest.raises(ValueError, match="title"):
-        Title("Python Developer")
-
-
-def test_rejects_multiple_spaces() -> None:
-    with pytest.raises(ValueError, match="title"):
-        Title("python  developer")
-
-
-def test_rejects_leading_space() -> None:
-    with pytest.raises(ValueError, match="title"):
-        Title(" python developer")
-
-
-def test_rejects_trailing_space() -> None:
-    with pytest.raises(ValueError, match="title"):
-        Title("python developer ")
-
-
-def test_rejects_empty() -> None:
-    with pytest.raises(ValueError, match="title"):
-        Title("")
+        Title(value)

@@ -6,12 +6,12 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
-from tests.contract.conftest import (
+from tests.contract.repository.conftest import DEFAULT_KEY
+from tests.support.builders import (
     PUBLISHED_AT,
     make_domain_vacancy,
     make_source_vacancy,
 )
-from tests.contract.repository.conftest import DEFAULT_KEY
 
 from vacancy_aggregator.core.models import DomainVacancy, Employer, Region, Title
 from vacancy_aggregator.core.services.deduplicator import candidate_key, is_duplicate

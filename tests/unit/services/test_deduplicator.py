@@ -2,117 +2,71 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
-from vacancy_aggregator.core.models import (
-    CandidateKey,
-    DomainVacancy,
-    Employer,
-    Region,
-    SourceRef,
-    SourceVacancy,
-    Title,
+from tests.support.builders import (
+    DEFAULT_EMPLOYER,
+    DEFAULT_REGION,
+    DEFAULT_TITLE,
+    PUBLISHED_AT,
+    make_domain_vacancy,
+    make_source_vacancy,
 )
+
+from vacancy_aggregator.core.models import CandidateKey, Employer, Region, Title
 from vacancy_aggregator.core.services.deduplicator import candidate_key, is_duplicate
 
-PUBLISHED_AT = datetime(2026, 1, 1, 12, 0)
 WINDOW = timedelta(days=30)
-DEFAULT_TITLE = Title("python developer")
-DEFAULT_EMPLOYER = Employer("acme")
-DEFAULT_REGION = Region("moscow")
-
-
-def make_source_vacancy(
-    *,
-    title: Title = DEFAULT_TITLE,
-    published_at: datetime = PUBLISHED_AT,
-    employer: Employer = DEFAULT_EMPLOYER,
-    region: Region | None = DEFAULT_REGION,
-) -> SourceVacancy:
-    """Build a SourceVacancy with convenient defaults."""
-    return SourceVacancy(
-        ref=SourceRef(source="hh", source_id="1"),
-        title=title,
-        published_at=published_at,
-        last_seen_at=published_at + timedelta(days=1),
-        employer=employer,
-        region=region,
-    )
-
-
-def make_domain_vacancy(
-    *,
-    title: Title = DEFAULT_TITLE,
-    published_at: datetime = PUBLISHED_AT,
-    employer: Employer = DEFAULT_EMPLOYER,
-    region: Region | None = DEFAULT_REGION,
-) -> DomainVacancy:
-    """Build a DomainVacancy with convenient defaults."""
-    return DomainVacancy(
-        title=title,
-        published_at=published_at,
-        employer=employer,
-        region=region,
-    )
 
 
 def test_duplicate_when_all_conditions_met() -> None:
-    candidate = make_source_vacancy()
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is True
+    assert is_duplicate(make_source_vacancy(), make_domain_vacancy(), window=WINDOW)
 
 
 def test_not_duplicate_when_window_exceeded() -> None:
     candidate = make_source_vacancy(
         published_at=PUBLISHED_AT + WINDOW + timedelta(seconds=1)
     )
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is False
+    assert not is_duplicate(candidate, make_domain_vacancy(), window=WINDOW)
 
 
 def test_duplicate_on_exact_window_boundary() -> None:
     candidate = make_source_vacancy(published_at=PUBLISHED_AT + WINDOW)
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is True
+    assert is_duplicate(candidate, make_domain_vacancy(), window=WINDOW)
 
 
 def test_window_is_symmetric() -> None:
     candidate = make_source_vacancy(published_at=PUBLISHED_AT - WINDOW)
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is True
+    assert is_duplicate(candidate, make_domain_vacancy(), window=WINDOW)
 
 
 def test_not_duplicate_when_title_differs() -> None:
     candidate = make_source_vacancy(title=Title("java developer"))
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is False
+    assert not is_duplicate(candidate, make_domain_vacancy(), window=WINDOW)
 
 
 def test_not_duplicate_when_region_differs() -> None:
     candidate = make_source_vacancy(region=Region("saint petersburg"))
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is False
+    assert not is_duplicate(candidate, make_domain_vacancy(), window=WINDOW)
 
 
 def test_region_required_in_both() -> None:
     candidate_missing = make_source_vacancy(region=None)
     existing_filled = make_domain_vacancy()
-    assert is_duplicate(candidate_missing, existing_filled, window=WINDOW) is False
+    assert not is_duplicate(candidate_missing, existing_filled, window=WINDOW)
 
     candidate_filled = make_source_vacancy()
     existing_missing = make_domain_vacancy(region=None)
-    assert is_duplicate(candidate_filled, existing_missing, window=WINDOW) is False
+    assert not is_duplicate(candidate_filled, existing_missing, window=WINDOW)
 
 
 def test_not_duplicate_when_employer_differs() -> None:
     candidate = make_source_vacancy(employer=Employer("other"))
-    existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is False
+    assert not is_duplicate(candidate, make_domain_vacancy(), window=WINDOW)
 
 
 def test_candidate_key_reflects_the_rule() -> None:
-    candidate = make_source_vacancy()
-    key = candidate_key(candidate)
+    key = candidate_key(make_source_vacancy())
     assert key == CandidateKey(
         employer=DEFAULT_EMPLOYER,
         title=DEFAULT_TITLE,
@@ -121,23 +75,18 @@ def test_candidate_key_reflects_the_rule() -> None:
 
 
 def test_candidate_key_is_none_without_region() -> None:
-    candidate = make_source_vacancy(region=None)
-    assert candidate_key(candidate) is None
+    assert candidate_key(make_source_vacancy(region=None)) is None
 
 
 def test_candidate_key_matches_duplicate_candidates() -> None:
-    """The index must never lose a duplicate — every is_duplicate pair
-    must share the same candidate key."""
+    """The index must never lose a duplicate: every matching pair shares a key."""
     candidate = make_source_vacancy()
     existing = make_domain_vacancy()
-    assert is_duplicate(candidate, existing, window=WINDOW) is True
+    assert is_duplicate(candidate, existing, window=WINDOW)
+
     key = candidate_key(candidate)
     assert key is not None
-    assert (
-        key.employer,
-        key.title,
-        key.region,
-    ) == (
+    assert (key.employer, key.title, key.region) == (
         existing.employer,
         existing.title,
         existing.region,

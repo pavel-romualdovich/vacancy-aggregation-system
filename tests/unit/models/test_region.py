@@ -7,8 +7,15 @@ import pytest
 from vacancy_aggregator.core.models import Region
 
 
-def test_accepts_canonical_region() -> None:
-    assert Region("moscow") == "moscow"
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("moscow", id="plain"),
+        pytest.param("saint-petersburg", id="special-characters"),
+    ],
+)
+def test_accepts_canonical_region(value: str) -> None:
+    assert Region(value) == value
 
 
 def test_region_is_a_string() -> None:
@@ -17,30 +24,16 @@ def test_region_is_a_string() -> None:
     assert region.upper() == "MOSCOW"
 
 
-def test_accepts_special_characters() -> None:
-    assert Region("saint-petersburg") == "saint-petersburg"
-
-
-def test_rejects_uppercase() -> None:
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("Moscow", id="uppercase"),
+        pytest.param("moscow  oblast", id="multiple-spaces"),
+        pytest.param(" moscow", id="leading-space"),
+        pytest.param("moscow ", id="trailing-space"),
+        pytest.param("", id="empty"),
+    ],
+)
+def test_rejects_non_canonical_region(value: str) -> None:
     with pytest.raises(ValueError, match="region"):
-        Region("Moscow")
-
-
-def test_rejects_multiple_spaces() -> None:
-    with pytest.raises(ValueError, match="region"):
-        Region("moscow  oblast")
-
-
-def test_rejects_leading_space() -> None:
-    with pytest.raises(ValueError, match="region"):
-        Region(" moscow")
-
-
-def test_rejects_trailing_space() -> None:
-    with pytest.raises(ValueError, match="region"):
-        Region("moscow ")
-
-
-def test_rejects_empty() -> None:
-    with pytest.raises(ValueError, match="region"):
-        Region("")
+        Region(value)

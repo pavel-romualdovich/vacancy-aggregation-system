@@ -22,51 +22,42 @@ def make_salary(
     )
 
 
-def test_salary_requires_at_least_one_bound() -> None:
+@pytest.mark.parametrize(
+    ("from_amount", "to_amount"),
+    [
+        pytest.param(100, None, id="only-from"),
+        pytest.param(None, 200, id="only-to"),
+        pytest.param(100, 200, id="both-bounds"),
+        pytest.param(100, 100, id="equal-bounds"),
+    ],
+)
+def test_accepts_valid_bounds(from_amount: int | None, to_amount: int | None) -> None:
+    salary = make_salary(from_amount=from_amount, to_amount=to_amount)
+    assert salary.from_amount == from_amount
+    assert salary.to_amount == to_amount
+
+
+def test_requires_at_least_one_bound() -> None:
     with pytest.raises(ValueError, match="at least one bound"):
         make_salary(from_amount=None, to_amount=None)
 
 
-def test_salary_accepts_only_from_amount() -> None:
-    salary = make_salary(to_amount=None)
-    assert salary.from_amount == 100
-    assert salary.to_amount is None
-
-
-def test_salary_accepts_only_to_amount() -> None:
-    salary = make_salary(from_amount=None)
-    assert salary.from_amount is None
-    assert salary.to_amount == 200
-
-
-def test_salary_accepts_both_bounds() -> None:
-    salary = make_salary(from_amount=100, to_amount=200)
-    assert salary.from_amount == 100
-    assert salary.to_amount == 200
-
-
-def test_salary_accepts_equal_bounds() -> None:
-    salary = make_salary(from_amount=100, to_amount=100)
-    assert salary.from_amount == salary.to_amount
-
-
-def test_salary_rejects_from_above_to() -> None:
+def test_rejects_from_above_to() -> None:
     with pytest.raises(ValueError, match="must not exceed"):
         make_salary(from_amount=200, to_amount=100)
 
 
-def test_salary_rejects_zero_from_amount() -> None:
+@pytest.mark.parametrize(
+    ("from_amount", "to_amount"),
+    [
+        pytest.param(0, None, id="zero-from"),
+        pytest.param(None, 0, id="zero-to"),
+        pytest.param(-100, None, id="negative-from"),
+        pytest.param(None, -200, id="negative-to"),
+    ],
+)
+def test_rejects_non_positive_bounds(
+    from_amount: int | None, to_amount: int | None
+) -> None:
     with pytest.raises(ValueError, match="positive"):
-        make_salary(from_amount=0)
-
-
-def test_salary_rejects_zero_to_amount() -> None:
-    with pytest.raises(ValueError, match="positive"):
-        make_salary(to_amount=0)
-
-
-def test_salary_rejects_negative_bounds() -> None:
-    with pytest.raises(ValueError, match="positive"):
-        make_salary(from_amount=-100)
-    with pytest.raises(ValueError, match="positive"):
-        make_salary(to_amount=-200)
+        make_salary(from_amount=from_amount, to_amount=to_amount)

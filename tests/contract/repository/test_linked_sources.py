@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from tests.contract.conftest import make_source_vacancy
+from tests.support.builders import make_source_vacancy
 
 from vacancy_aggregator.core.models import SourceRef, uuid7
 

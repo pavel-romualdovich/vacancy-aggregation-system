@@ -5,12 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable
 
 import pytest
-from tests.contract.conftest import (
+from tests.support import InMemoryVacancyRepository
+from tests.support.builders import (
     DEFAULT_EMPLOYER,
     DEFAULT_REGION,
     DEFAULT_TITLE,
 )
-from tests.support.in_memory import InMemoryVacancyRepository
 
 from vacancy_aggregator.core.models import CandidateKey
 from vacancy_aggregator.core.ports import VacancyRepository

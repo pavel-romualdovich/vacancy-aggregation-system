@@ -133,10 +133,6 @@ def test_region_case_is_normalized(raw: str, expected: str) -> None:
     assert normalize_region(raw) == Region(expected)
 
 
-def test_region_special_characters_are_preserved() -> None:
-    assert normalize_region("Санкт-Петербург") == Region("санкт-петербург")
-
-
 def test_region_whitespace_is_collapsed() -> None:
     assert normalize_region("  Санкт-Петербург   область  ") == Region(
         "санкт-петербург область"

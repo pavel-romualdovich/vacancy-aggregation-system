@@ -7,12 +7,15 @@ import pytest
 from vacancy_aggregator.core.models import Employer
 
 
-def test_accepts_canonical_employer() -> None:
-    assert Employer("acme") == "acme"
-
-
-def test_accepts_employer_with_legal_form_prefix() -> None:
-    assert Employer("llc romashka") == "llc romashka"
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("acme", id="plain"),
+        pytest.param("llc romashka", id="legal-form-prefix"),
+    ],
+)
+def test_accepts_canonical_employer(value: str) -> None:
+    assert Employer(value) == value
 
 
 def test_employer_is_a_string() -> None:
@@ -21,31 +24,17 @@ def test_employer_is_a_string() -> None:
     assert employer.upper() == "ACME"
 
 
-def test_rejects_uppercase() -> None:
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("Acme", id="uppercase"),
+        pytest.param("acme&co", id="special-characters"),
+        pytest.param("acme  co", id="multiple-spaces"),
+        pytest.param(" acme", id="leading-space"),
+        pytest.param("acme ", id="trailing-space"),
+        pytest.param("", id="empty"),
+    ],
+)
+def test_rejects_non_canonical_employer(value: str) -> None:
     with pytest.raises(ValueError, match="employer"):
-        Employer("Acme")
-
-
-def test_rejects_special_characters() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        Employer("acme&co")
-
-
-def test_rejects_multiple_spaces() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        Employer("acme  co")
-
-
-def test_rejects_leading_space() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        Employer(" acme")
-
-
-def test_rejects_trailing_space() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        Employer("acme ")
-
-
-def test_rejects_empty() -> None:
-    with pytest.raises(ValueError, match="employer"):
-        Employer("")
+        Employer(value)
