@@ -14,6 +14,7 @@ dev = [
     "mypy>=2.4.0",
     "pytest>=9.1.1",
     "pre-commit>=4.7.0",
+    "pytest-asyncio>=1.4.1",
 ]
 
 [tool.ruff]
@@ -101,3 +102,5 @@ enable_error_code = ["ignore-without-code"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
