@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import timedelta
+from typing import Any
 
 import pytest
 from tests.support.builders import (
@@ -38,7 +39,7 @@ def source_ref(source: str, source_id: str = "1") -> SourceRef:
     return SourceRef(source=source, source_id=source_id)
 
 
-def make_fresh_source(**overrides: object) -> SourceVacancy:
+def make_fresh_source(**overrides: Any) -> SourceVacancy:
     """Build a source vacancy fresher than the default one."""
     return make_source_vacancy(
         detected_updated_at=DETECTED_LATER,
@@ -188,8 +189,8 @@ def test_all_empty_optional_fields_merge_to_none() -> None:
 )
 def test_all_scalar_fields_merge_by_freshness(
     field: str,
-    older_value: object,
-    fresher_value: object,
+    older_value: Any,
+    fresher_value: Any,
 ) -> None:
     older = make_source_vacancy(
         ref=SourceRef("hh", "older"),
