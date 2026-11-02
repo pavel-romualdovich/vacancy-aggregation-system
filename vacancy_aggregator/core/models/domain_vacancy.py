@@ -7,30 +7,25 @@ from typing import TYPE_CHECKING
 
 from uuid6 import uuid7
 
-from vacancy_aggregator.core.models.values import Employer, Region, Skills, Title
-
 if TYPE_CHECKING:
     from datetime import datetime
     from uuid import UUID
 
-    from vacancy_aggregator.core.models.enums import (
-        EmploymentType,
-        Experience,
-        Grade,
-        Specialization,
-        WorkFormat,
+    from vacancy_aggregator.core.models.vacancy_business_fields import (
+        VacancyBusinessFields,
     )
-    from vacancy_aggregator.core.models.values import Salary
 
 
 @dataclass(kw_only=True)
 class DomainVacancy:
     """One vacancy merged from all of its :class:`SourceVacancy` instances.
 
-    Business fields are the result of the merge rules (freshness via
-    ``detected_updated_at`` falling back to ``published_at``; an empty value
-    never overwrites a filled one). No technical fields (source, source_id,
-    url, service dates) live here, so they cannot leak into the API.
+    The merged business data live in ``business_fields`` and result from the
+    merge rules (freshness via ``detected_updated_at`` falling back to
+    ``published_at``; an empty value never overwrites a filled one). No
+    technical fields (source, source_id, url, service dates) live here, so
+    they cannot leak into the API — the remaining fields are identity and
+    lifecycle metadata.
 
     ``published_at`` is used for ordering and equals the maximum publication
     time across the linked source vacancies. The vacancy is active while at
@@ -38,28 +33,12 @@ class DomainVacancy:
     exactly when the vacancy is inactive.
     """
 
-    title: Title
+    business_fields: VacancyBusinessFields
     published_at: datetime
-    employer: Employer
     id: UUID = field(default_factory=uuid7)
-    description: str | None = None
-    salary: Salary | None = None
-    region: Region | None = None
-    experience: Experience | None = None
-    employment_type: EmploymentType | None = None
-    work_format: WorkFormat | None = None
-    grade: Grade | None = None
-    specialization: Specialization | None = None
-    skills: Skills = field(default_factory=Skills)
     inactive_since: datetime | None = None
 
     @property
     def is_active(self) -> bool:
         """Whether the vacancy is currently active."""
         return self.inactive_since is None
-
-    def __post_init__(self) -> None:
-        """Validate non-empty fields."""
-        if self.description is not None and not self.description.strip():
-            msg = "description must not be empty"
-            raise ValueError(msg)

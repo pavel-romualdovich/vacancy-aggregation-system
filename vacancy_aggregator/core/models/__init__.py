@@ -12,6 +12,12 @@ from vacancy_aggregator.core.models.enums import (
     WorkFormat,
 )
 from vacancy_aggregator.core.models.source_vacancy import SourceVacancy
+from vacancy_aggregator.core.models.source_vacancy_snapshot import (
+    SourceVacancySnapshot,
+)
+from vacancy_aggregator.core.models.vacancy_business_fields import (
+    VacancyBusinessFields,
+)
 from vacancy_aggregator.core.models.values import (
     CandidateKey,
     Employer,
@@ -35,8 +41,10 @@ __all__ = [
     "Skills",
     "SourceRef",
     "SourceVacancy",
+    "SourceVacancySnapshot",
     "Specialization",
     "Title",
+    "VacancyBusinessFields",
     "WorkFormat",
     "uuid7",
 ]

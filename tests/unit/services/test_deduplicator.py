@@ -87,7 +87,7 @@ def test_candidate_key_matches_duplicate_candidates() -> None:
     key = candidate_key(candidate)
     assert key is not None
     assert (key.employer, key.title, key.region) == (
-        existing.employer,
-        existing.title,
-        existing.region,
+        existing.business_fields.employer,
+        existing.business_fields.title,
+        existing.business_fields.region,
     )

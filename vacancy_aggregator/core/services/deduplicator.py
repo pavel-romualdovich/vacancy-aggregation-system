@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from vacancy_aggregator.core.models.values import CandidateKey
 
 if TYPE_CHECKING:
     from vacancy_aggregator.core.models.domain_vacancy import DomainVacancy
     from vacancy_aggregator.core.models.source_vacancy import SourceVacancy
+
+DEFAULT_WINDOW: Final = timedelta(days=30)
 
 
 def candidate_key(candidate: SourceVacancy) -> CandidateKey | None:
@@ -21,12 +23,12 @@ def candidate_key(candidate: SourceVacancy) -> CandidateKey | None:
     look up). Keeping the key next to the rule guarantees they never drift
     apart.
     """
-    if candidate.region is None:
+    if candidate.business_fields.region is None:
         return None
     return CandidateKey(
-        employer=candidate.employer,
-        title=candidate.title,
-        region=candidate.region,
+        employer=candidate.business_fields.employer,
+        title=candidate.business_fields.title,
+        region=candidate.business_fields.region,
     )
 
 
@@ -46,10 +48,13 @@ def is_duplicate(
     """
     if abs(candidate.published_at - existing.published_at) > window:
         return False
-    if candidate.title != existing.title:
+    if candidate.business_fields.title != existing.business_fields.title:
         return False
-    if candidate.region is None or existing.region is None:
+    if (
+        candidate.business_fields.region is None
+        or existing.business_fields.region is None
+    ):
         return False
-    if candidate.region != existing.region:
+    if candidate.business_fields.region != existing.business_fields.region:
         return False
-    return candidate.employer == existing.employer
+    return candidate.business_fields.employer == existing.business_fields.employer

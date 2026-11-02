@@ -64,12 +64,12 @@ def test_single_source_is_projected() -> None:
         skills=Skills(["python", "django"]),
     )
     vacancy = build_domain_vacancy([source])
-    assert vacancy.title == "python developer"
-    assert vacancy.employer == "acme"
-    assert vacancy.description == "desc"
-    assert vacancy.salary == salary
-    assert vacancy.region == "moscow"
-    assert vacancy.skills == Skills(["python", "django"])
+    assert vacancy.business_fields.title == "python developer"
+    assert vacancy.business_fields.employer == "acme"
+    assert vacancy.business_fields.description == "desc"
+    assert vacancy.business_fields.salary == salary
+    assert vacancy.business_fields.region == "moscow"
+    assert vacancy.business_fields.skills == Skills(["python", "django"])
     assert vacancy.published_at == PUBLISHED_AT
     assert vacancy.is_active is True
     assert vacancy.inactive_since is None
@@ -80,13 +80,15 @@ def test_identical_values_are_preserved() -> None:
         make_source_vacancy(ref=SourceRef("hh", "1"), region=Region("moscow")),
         make_source_vacancy(ref=SourceRef("hh", "2"), region=Region("moscow")),
     ]
-    assert build_domain_vacancy(sources).region == "moscow"
+    assert build_domain_vacancy(sources).business_fields.region == "moscow"
 
 
 def test_non_empty_wins_over_empty_regardless_of_freshness() -> None:
     fresher = make_fresh_source(description=None)
     older = make_source_vacancy(ref=SourceRef("hh", "2"), description="filled")
-    assert build_domain_vacancy([fresher, older]).description == "filled"
+    assert (
+        build_domain_vacancy([fresher, older]).business_fields.description == "filled"
+    )
 
 
 def test_fresher_value_wins_when_both_present() -> None:
@@ -96,7 +98,7 @@ def test_fresher_value_wins_when_both_present() -> None:
         detected_updated_at=PUBLISHED_AT,
     )
     fresher = make_fresh_source(ref=SourceRef("hh", "2"), description="new")
-    assert build_domain_vacancy([older, fresher]).description == "new"
+    assert build_domain_vacancy([older, fresher]).business_fields.description == "new"
 
 
 def test_freshness_falls_back_to_published_at() -> None:
@@ -106,21 +108,21 @@ def test_freshness_falls_back_to_published_at() -> None:
         description="new",
         published_at=NEWER_PUBLISHED,
     )
-    assert build_domain_vacancy([older, fresher]).description == "new"
+    assert build_domain_vacancy([older, fresher]).business_fields.description == "new"
 
 
 def test_equal_freshness_prefers_smaller_source() -> None:
     source_larger = make_source_vacancy(ref=source_ref("zz"), description="second")
     source_smaller = make_source_vacancy(ref=source_ref("aa"), description="first")
     vacancy = build_domain_vacancy([source_larger, source_smaller])
-    assert vacancy.description == "first"
+    assert vacancy.business_fields.description == "first"
 
 
 def test_equal_freshness_and_source_id_prefers_smaller_source() -> None:
     first = make_source_vacancy(ref=source_ref("hh"), description="from_hh")
     second = make_source_vacancy(ref=source_ref("sj"), description="from_sj")
     vacancy = build_domain_vacancy([first, second])
-    assert vacancy.description == "from_hh"
+    assert vacancy.business_fields.description == "from_hh"
 
 
 def test_result_is_order_independent() -> None:
@@ -134,10 +136,14 @@ def test_result_is_order_independent() -> None:
     forward = build_domain_vacancy([older, fresher])
     backward = build_domain_vacancy([fresher, older])
 
-    assert forward.description == backward.description == "new"
-    assert forward.region == backward.region
-    assert forward.skills == backward.skills
-    assert forward.title == backward.title
+    assert (
+        forward.business_fields.description
+        == backward.business_fields.description
+        == "new"
+    )
+    assert forward.business_fields.region == backward.business_fields.region
+    assert forward.business_fields.skills == backward.business_fields.skills
+    assert forward.business_fields.title == backward.business_fields.title
 
 
 def test_input_sources_are_not_mutated() -> None:
@@ -147,16 +153,16 @@ def test_input_sources_are_not_mutated() -> None:
         skills=Skills(["python"]),
     )
     snapshot = (
-        source.description,
-        source.region,
-        source.skills,
+        source.business_fields.description,
+        source.business_fields.region,
+        source.business_fields.skills,
         source.detected_updated_at,
     )
     build_domain_vacancy([source])
     assert (
-        source.description,
-        source.region,
-        source.skills,
+        source.business_fields.description,
+        source.business_fields.region,
+        source.business_fields.skills,
         source.detected_updated_at,
     ) == snapshot
 
@@ -167,10 +173,10 @@ def test_all_empty_optional_fields_merge_to_none() -> None:
         make_source_vacancy(ref=SourceRef("hh", "2"), region=None),
     ]
     vacancy = build_domain_vacancy(sources)
-    assert vacancy.description is None
-    assert vacancy.region is None
-    assert vacancy.salary is None
-    assert vacancy.experience is None
+    assert vacancy.business_fields.description is None
+    assert vacancy.business_fields.region is None
+    assert vacancy.business_fields.salary is None
+    assert vacancy.business_fields.experience is None
 
 
 @pytest.mark.parametrize(
@@ -197,11 +203,16 @@ def test_all_scalar_fields_merge_by_freshness(
         detected_updated_at=PUBLISHED_AT,
     )
     fresher = make_fresh_source(ref=SourceRef("hh", "fresher"))
-    older = replace(older, **{field: older_value})
-    fresher = replace(fresher, **{field: fresher_value})
+    older = replace(
+        older, business_fields=replace(older.business_fields, **{field: older_value})
+    )
+    fresher = replace(
+        fresher,
+        business_fields=replace(fresher.business_fields, **{field: fresher_value}),
+    )
 
     vacancy = build_domain_vacancy([older, fresher])
-    assert getattr(vacancy, field) == fresher_value
+    assert getattr(vacancy.business_fields, field) == fresher_value
 
 
 def test_detected_updated_at_outranks_published_at() -> None:
@@ -215,7 +226,7 @@ def test_detected_updated_at_outranks_published_at() -> None:
         published_at=NEWER_PUBLISHED,
     )
     vacancy = build_domain_vacancy([newer_published, with_detected])
-    assert vacancy.description == "from_detected"
+    assert vacancy.business_fields.description == "from_detected"
 
 
 def test_skills_are_union() -> None:
@@ -225,7 +236,9 @@ def test_skills_are_union() -> None:
             ref=SourceRef("hh", "2"), skills=Skills(["django", "python"])
         ),
     ]
-    assert build_domain_vacancy(sources).skills == Skills(["python", "django"])
+    assert build_domain_vacancy(sources).business_fields.skills == Skills(
+        ["python", "django"]
+    )
 
 
 def test_published_at_is_max_across_sources() -> None:
@@ -257,7 +270,7 @@ def test_salary_non_empty_wins_over_empty() -> None:
         make_source_vacancy(ref=SourceRef("hh", "1"), salary=None),
         make_source_vacancy(ref=SourceRef("hh", "2"), salary=salary),
     ]
-    assert build_domain_vacancy(sources).salary == salary
+    assert build_domain_vacancy(sources).business_fields.salary == salary
 
 
 def test_salary_fresher_wins_when_both_present() -> None:
@@ -275,4 +288,4 @@ def test_salary_fresher_wins_when_both_present() -> None:
         ),
         make_fresh_source(ref=SourceRef("hh", "2"), salary=fresher),
     ]
-    assert build_domain_vacancy(sources).salary == fresher
+    assert build_domain_vacancy(sources).business_fields.salary == fresher

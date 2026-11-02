@@ -5,6 +5,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from vacancy_aggregator.core.models.domain_vacancy import DomainVacancy
+from vacancy_aggregator.core.models.vacancy_business_fields import (
+    VacancyBusinessFields,
+)
 from vacancy_aggregator.core.models.values import Skills
 
 if TYPE_CHECKING:
@@ -39,24 +42,46 @@ def build_domain_vacancy(sources: Sequence[SourceVacancy]) -> DomainVacancy:
     )
 
     return DomainVacancy(
-        title=_require_field(sources_by_preference, lambda s: s.title, "title"),
-        employer=_require_field(
-            sources_by_preference, lambda s: s.employer, "employer"
+        business_fields=VacancyBusinessFields(
+            title=_require_field(
+                sources_by_preference,
+                lambda s: s.business_fields.title,
+                "title",
+            ),
+            employer=_require_field(
+                sources_by_preference,
+                lambda s: s.business_fields.employer,
+                "employer",
+            ),
+            description=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.description
+            ),
+            salary=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.salary
+            ),
+            region=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.region
+            ),
+            experience=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.experience
+            ),
+            employment_type=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.employment_type
+            ),
+            work_format=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.work_format
+            ),
+            grade=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.grade
+            ),
+            specialization=_first_non_none(
+                sources_by_preference, lambda s: s.business_fields.specialization
+            ),
+            skills=Skills(
+                skill for source in sources for skill in source.business_fields.skills
+            ),
         ),
         published_at=max(source.published_at for source in sources_by_preference),
-        description=_first_non_none(sources_by_preference, lambda s: s.description),
-        salary=_first_non_none(sources_by_preference, lambda s: s.salary),
-        region=_first_non_none(sources_by_preference, lambda s: s.region),
-        experience=_first_non_none(sources_by_preference, lambda s: s.experience),
-        employment_type=_first_non_none(
-            sources_by_preference, lambda s: s.employment_type
-        ),
-        work_format=_first_non_none(sources_by_preference, lambda s: s.work_format),
-        grade=_first_non_none(sources_by_preference, lambda s: s.grade),
-        specialization=_first_non_none(
-            sources_by_preference, lambda s: s.specialization
-        ),
-        skills=Skills(skill for source in sources for skill in source.skills),
     )
 
 

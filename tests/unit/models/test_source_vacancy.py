@@ -33,13 +33,13 @@ def test_rejects_empty_description() -> None:
 
 def test_accepts_none_description_and_region() -> None:
     vacancy = make_source_vacancy(description=None, region=None)
-    assert vacancy.description is None
-    assert vacancy.region is None
+    assert vacancy.business_fields.description is None
+    assert vacancy.business_fields.region is None
 
 
 def test_accepts_normalized_skills() -> None:
     vacancy = make_source_vacancy(skills=Skills(["python", "django"]))
-    assert vacancy.skills == frozenset({"python", "django"})
+    assert vacancy.business_fields.skills == frozenset({"python", "django"})
 
 
 def test_domain_id_defaults_to_none() -> None:

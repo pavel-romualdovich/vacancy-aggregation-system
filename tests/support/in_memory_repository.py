@@ -36,7 +36,11 @@ class InMemoryVacancyRepository:
         return tuple(
             domain
             for domain in self._domains.values()
-            if (domain.employer, domain.title, domain.region)
+            if (
+                domain.business_fields.employer,
+                domain.business_fields.title,
+                domain.business_fields.region,
+            )
             == (key.employer, key.title, key.region)
         )
 
