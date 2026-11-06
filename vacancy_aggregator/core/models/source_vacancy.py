@@ -9,6 +9,9 @@ if TYPE_CHECKING:
     from datetime import datetime
     from uuid import UUID
 
+    from vacancy_aggregator.core.models.source_vacancy_snapshot import (
+        SourceVacancySnapshot,
+    )
     from vacancy_aggregator.core.models.vacancy_business_fields import (
         VacancyBusinessFields,
     )
@@ -55,3 +58,18 @@ class SourceVacancy:
         ):
             msg = "detected_updated_at must not be after last_seen_at"
             raise ValueError(msg)
+
+    @classmethod
+    def from_snapshot(cls, snapshot: SourceVacancySnapshot) -> SourceVacancy:
+        """Build the first record for a source reference from an observation."""
+        return cls(
+            ref=snapshot.ref,
+            business_fields=snapshot.business_fields,
+            published_at=(
+                snapshot.published_at
+                if snapshot.published_at is not None
+                else snapshot.collected_at
+            ),
+            last_seen_at=snapshot.collected_at,
+            is_active=(snapshot.is_active if snapshot.is_active is not None else True),
+        )
